@@ -36,7 +36,7 @@ module Peatio
         raise Peatio::Blockchain::ClientError, e
       end
 
-      def load_balance_of_address!(address, _currency_id)
+      def load_balance_of_address!(address)
         address_with_balance = client.json_rpc(:listaddressgroupings)
                                  .flatten(1)
                                  .find { |addr| addr[0] == address }
@@ -53,7 +53,7 @@ module Peatio
       private
 
       def build_transaction(tx_hash)
-        tx_hash = client.json_rpc(:getrawtransaction, [tx_hash, true])
+        tx_hash = client.json_rpc(:getrawtransaction, [tx_hash, 1])
         tx_hash.fetch('vout')
           .select do |entry|
           entry.fetch('value').to_d > 0 &&
