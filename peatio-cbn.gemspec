@@ -2,7 +2,7 @@
 
 lib = File.expand_path("lib", __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "peatio/dash/version"
+require "peatio/cbn/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "peatio-cbn"
