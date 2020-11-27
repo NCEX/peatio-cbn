@@ -1,42 +1,38 @@
-# frozen_string_literal: true
-
 module Peatio
   module Cbn
     class Wallet < Peatio::Wallet::Abstract
-      def initialize(settings={})
+
+      def initialize(settings = {})
         @settings = settings
       end
 
-      def configure(settings={})
+      def configure(settings = {})
         # Clean client state during configure.
         @client = nil
 
         @settings.merge!(settings.slice(*SUPPORTED_SETTINGS))
 
-        @wallet = @settings.fetch(:wallet) {
+        @wallet = @settings.fetch(:wallet) do
           raise Peatio::Wallet::MissingSettingError, :wallet
-        }.slice(:uri, :address)
+        end.slice(:uri, :address)
 
-        @currency = @settings.fetch(:currency) {
+        @currency = @settings.fetch(:currency) do
           raise Peatio::Wallet::MissingSettingError, :currency
-        }.slice(:id, :base_factor, :options)
+        end.slice(:id, :base_factor, :options)
       end
 
-      def create_address!(_options={})
-        {address: client.json_rpc(:getnewaddress)}
+      def create_address!(_options = {})
+        { address: client.json_rpc(:getnewaddress) }
       rescue Cbn::Client::Error => e
         raise Peatio::Wallet::ClientError, e
       end
 
-      def create_transaction!(transaction, options={})
-        txid = client.json_rpc(:sendtoaddress,
-                               [
-                                 transaction.to_address,
-                                 transaction.amount,
-                                 "",
-                                 "",
-                                 options[:subtract_fee].to_s == "true" # subtract fee from transaction amount.
-                               ])
+      def create_transaction!(transaction, options = {})
+        txid = client.json_rpc_for_withdrawal(:sendtoaddress,
+                                              transaction.to_address,
+                                              transaction.amount,
+        # options  # subtract fee from transaction amount.
+                                              )
         transaction.hash = txid
         transaction
       rescue Cbn::Client::Error => e
@@ -45,6 +41,7 @@ module Peatio
 
       def load_balance!
         client.json_rpc(:getbalance).to_d
+
       rescue Cbn::Client::Error => e
         raise Peatio::Wallet::ClientError, e
       end
