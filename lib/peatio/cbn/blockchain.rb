@@ -26,17 +26,17 @@ module Peatio
           end
           txs_array.append(*txs)
         end.yield_self { |txs_array| Peatio::Block.new(block_number, txs_array) }
-      rescue Client::Error => e
+      rescue Cbn::Client::Error => e
         raise Peatio::Blockchain::ClientError, e
       end
 
       def latest_block_number
         client.json_rpc(:getblockcount)
-      rescue Client::Error => e
+      rescue Cbn::Client::Error => e
         raise Peatio::Blockchain::ClientError, e
       end
 
-      def load_balance_of_address!(address)
+      def load_balance_of_address!(address, _currency_id)
         address_with_balance = client.json_rpc(:listaddressgroupings)
                                  .flatten(1)
                                  .find { |addr| addr[0] == address }
@@ -46,14 +46,14 @@ module Peatio
         end
 
         address_with_balance[1].to_d
-      rescue Client::Error => e
+      rescue Cbn::Client::Error => e
         raise Peatio::Blockchain::ClientError, e
       end
 
       private
 
       def build_transaction(tx_hash)
-        tx_hash = client.json_rpc(:getrawtransaction, [tx_hash, 1])
+        tx_hash = client.json_rpc(:getrawtransaction, [tx_hash, true])
         tx_hash.fetch('vout')
           .select do |entry|
           entry.fetch('value').to_d > 0 &&
@@ -74,7 +74,7 @@ module Peatio
       end
 
       def client
-        @client ||= Client.new(settings_fetch(:server))
+        @client ||= Cbn::Client.new(settings_fetch(:server))
       end
 
       def settings_fetch(key)
